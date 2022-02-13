@@ -27,11 +27,11 @@ miner_name: Miner
 
 Customization:
 ------
-- gpu_warn_temp
-- gpu_max_temp
-- vram_warn_temp
-- vram_max_temp
-- fan_speed_warn
-- mining_algorithm
+- gpu_warn_temp (default: 70)
+- gpu_max_temp (default: 80)
+- vram_warn_temp (default: 90)
+- vram_max_temp (default: 95)
+- fan_speed_warn (default: 98)
+- mining_algorithm (default: daggerhashimoto)
 
 ![Config](https://github.com/MesserschmittX/lovelace-nicehash-excavator-monitor-card/blob/bdb1e7395937f5c307aeb4f9e99d5ee0f4a79d0e/images/card_config.png)
