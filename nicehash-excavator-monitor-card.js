@@ -3,13 +3,13 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
     config;
     content;
     display_name = "";
-    rig_name = "";
+    miner_name = "";
 
     set hass(hass) {
         const states = hass.states;
 
-        this.display_name = this.config.rig_name;
-        this.rig_name = this.config.rig_name.replace(" ", "_").toLowerCase();
+        this.display_name = this.config.miner_name;
+        this.miner_name = this.config.miner_name.replace(" ", "_").toLowerCase();
 
         if (!this.content) {
             this.innerHTML = `
@@ -20,10 +20,10 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
             this.content = this.querySelector("div");
         }
 
-        const gpu_count = states["sensor." + this.rig_name + "_gpu_count"]?.state;
+        const gpu_count = states["sensor." + this.miner_name + "_gpu_count"]?.state;
 
         if (!(gpu_count >= 0)) {
-            this.content.innerHTML = "<p> No GPUs found for this rig name </p>";
+            this.content.innerHTML = "<p> No GPUs found for this miner name </p>";
             return;
         }
 
@@ -36,13 +36,13 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
 
         this.rows = [];
         for (let i = 0; i < gpu_count; i++) {
-            const gpu_sensor = states["sensor." + this.rig_name + "_gpu_" + i + "_gpu"];
-            const vram_sensor = states["sensor." + this.rig_name + "_gpu_" + i + "_vram"];
-            const fan_sensor = states["sensor." + this.rig_name + "_gpu_" + i + "_fan"];
-            const power_sensor = states["sensor." + this.rig_name + "_gpu_" + i + "_power"];
-            const hash_sensor = states["sensor." + this.rig_name + "_gpu_" + i + "_" + mining_algorithm];
-            const gpu_model = states["sensor." + this.rig_name + "_gpu_" + i + "_gpu_model"].state?.replace("GeForce ", "").replace("RTX ", "");
-            const gpu_vendor_id = states["sensor." + this.rig_name + "_gpu_" + i + "_vendor_id"].state?.toUpperCase();
+            const gpu_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu"];
+            const vram_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_vram"];
+            const fan_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_fan"];
+            const power_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_power"];
+            const hash_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_" + mining_algorithm];
+            const gpu_model = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu_model"].state?.replace("GeForce ", "").replace("RTX ", "");
+            const gpu_vendor_id = states["sensor." + this.miner_name + "_gpu_" + i + "_vendor_id"].state?.toUpperCase();
             const gpu_vendor = PCIE_VENDOR_IDS[gpu_vendor_id] ?? gpu_vendor_id;
 
             const gpu_color = gpu_sensor?.state >= gpu_max_temp ? "red" : gpu_sensor?.state < gpu_warn_temp ? "green" : "yellow";
@@ -88,8 +88,8 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
     }
 
     setConfig(config) {
-        if (!config.rig_name) {
-            throw new Error("You need to define the rig name");
+        if (!config.miner_name) {
+            throw new Error("You need to define the miner name");
         }
         this.config = config;
     }
