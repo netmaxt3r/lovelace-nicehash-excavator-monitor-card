@@ -19,7 +19,7 @@ Example:
 Usage:
 ------
 type: custom:nicehash-excavator-monitor-card
-<br>
+
 miner_name: Miner
 
 ⚠ miner_name has to match the name given for the Nicehash Excavator Monitor integration.
