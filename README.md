@@ -13,7 +13,7 @@ Requirements:
 
 Example:
 ------
-![Demo](images/card_demo.JPG)
+![Demo](images/card_demo.png)
 
 
 Usage:
@@ -34,4 +34,4 @@ Customization:
 - fan_speed_warn
 - mining_algorithm
 
-![Config](images/card_config.JPG)
+![Config](images/card_config.png)
