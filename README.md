@@ -13,7 +13,7 @@ Requirements:
 
 Example:
 ------
-![Demo](images/card_demo.png)
+![Demo](https://github.com/MesserschmittX/lovelace-nicehash-excavator-monitor-card/blob/bdb1e7395937f5c307aeb4f9e99d5ee0f4a79d0e/images/card_demo.png)
 
 
 Usage:
@@ -34,4 +34,4 @@ Customization:
 - fan_speed_warn
 - mining_algorithm
 
-![Config](images/card_config.png)
+![Config](https://github.com/MesserschmittX/lovelace-nicehash-excavator-monitor-card/blob/bdb1e7395937f5c307aeb4f9e99d5ee0f4a79d0e/images/card_config.png)
