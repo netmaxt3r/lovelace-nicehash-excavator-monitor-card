@@ -27,10 +27,10 @@ miner_name: Miner
 
 Customization:
 ------
-- gpu_max_temp
 - gpu_warn_temp
-- vram_max_temp
+- gpu_max_temp
 - vram_warn_temp
+- vram_max_temp
 - fan_speed_warn
 - mining_algorithm
 
