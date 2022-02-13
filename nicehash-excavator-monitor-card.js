@@ -28,10 +28,10 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
         }
 
         let mining_algorithm = this.config.algorithm ?? "daggerhashimoto";
-        let gpu_max_temp = this.config.gpu_max_temp ?? 80;
         let gpu_warn_temp = this.config.gpu_warn_temp ?? 70;
-        let vram_max_temp = this.config.vram_max_temp ?? 95;
+        let gpu_max_temp = this.config.gpu_max_temp ?? 80;
         let vram_warn_temp = this.config.vram_warn_temp ?? 90;
+        let vram_max_temp = this.config.vram_max_temp ?? 95;
         let fan_speed_warn = this.config.fan_speed_warn ?? 98;
 
         this.rows = [];
