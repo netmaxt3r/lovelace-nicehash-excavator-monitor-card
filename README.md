@@ -13,7 +13,16 @@ Requirements:
 
 Example:
 ------
-![Demo](card_demo.JPG)
+![Demo](images/card_demo.JPG)
+
+
+Usage:
+------
+type: custom:nicehash-excavator-monitor-card
+<br>
+miner_name: Miner
+
+⚠ miner_name has to match the name given for the Nicehash Excavator Monitor integration.
 
 
 Customization:
@@ -24,3 +33,5 @@ Customization:
 - vram_warn_temp
 - fan_speed_warn
 - mining_algorithm
+
+![Config](images/card_config.JPG)
