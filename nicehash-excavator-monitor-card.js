@@ -20,95 +20,100 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
             this.content = this.querySelector("div");
         }
 
-        const gpu_count = states["sensor." + this.miner_name + "_gpu_count"]?.state;
+        try {
+            const gpu_count = states["sensor." + this.miner_name + "_gpu_count"]?.state;
 
-        if (!(gpu_count >= 0)) {
-            this.content.innerHTML = "<p> No GPUs found for this miner name </p>";
-            return;
-        }
+            if (!(gpu_count >= 0)) {
+                this.content.innerHTML = "<p> No GPUs found for this miner name </p>";
+                return;
+            }
 
-        let mining_algorithm = this.config.algorithm ?? "daggerhashimoto";
-        let gpu_warn_temp = this.config.gpu_warn_temp ?? 70;
-        let gpu_max_temp = this.config.gpu_max_temp ?? 80;
-        let vram_warn_temp = this.config.vram_warn_temp ?? 90;
-        let vram_max_temp = this.config.vram_max_temp ?? 95;
-        let fan_speed_warn = this.config.fan_speed_warn ?? 98;
+            let mining_algorithm = this.config.algorithm ?? "daggerhashimoto";
+            let gpu_warn_temp = this.config.gpu_warn_temp ?? 70;
+            let gpu_max_temp = this.config.gpu_max_temp ?? 80;
+            let vram_warn_temp = this.config.vram_warn_temp ?? 90;
+            let vram_max_temp = this.config.vram_max_temp ?? 95;
+            let fan_speed_warn = this.config.fan_speed_warn ?? 98;
 
-        const miner_power_sensor = states["sensor." + this.miner_name + "_power"];
-        const miner_hash_sensor = states["sensor." + this.miner_name + "_" + mining_algorithm];
-        const miner_cpu_sensor = states["sensor." + this.miner_name + "_cpu"];
-        const miner_ram_sensor = states["sensor." + this.miner_name + "_ram"];
-        const miner_power = miner_power_sensor?.state === "Unavailable" ? "Unavailable" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
-        const miner_hashrate = !miner_hash_sensor?.state || miner_hash_sensor?.state === "Unavailable" ? "Unavailable" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
-        const miner_cpu = miner_cpu_sensor?.state === "Unavailable" ? "Unavailable" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
-        const miner_ram = miner_ram_sensor?.state === "Unavailable" ? "Unavailable" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
+            const miner_power_sensor = states["sensor." + this.miner_name + "_power"];
+            const miner_hash_sensor = states["sensor." + this.miner_name + "_" + mining_algorithm];
+            const miner_cpu_sensor = states["sensor." + this.miner_name + "_cpu"];
+            const miner_ram_sensor = states["sensor." + this.miner_name + "_ram"];
+        
+            const miner_power = !miner_power_sensor?.state ? "Unavailable" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
+            const miner_hashrate = !miner_hash_sensor?.state || miner_hash_sensor?.state === "Unavailable" ? "Unavailable" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
+            const miner_cpu = !miner_cpu_sensor?.state ? "Unavailable" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
+            const miner_ram = !miner_ram_sensor?.state ? "Unavailable" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
+            
+            this.rows = [];
+            for (let i = 0; i < gpu_count; i++) {
+                const gpu_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu"];
+                const vram_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_vram"];
+                const fan_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_fan"];
+                const power_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_power"];
+                const hash_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_" + mining_algorithm];
+                const gpu_model = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu_model"].state?.replace("GeForce ", "").replace("RTX ", "");
+                const gpu_vendor_id = states["sensor." + this.miner_name + "_gpu_" + i + "_vendor_id"].state?.toUpperCase();
+                const gpu_vendor = PCIE_VENDOR_IDS[gpu_vendor_id] ?? gpu_vendor_id;
 
-        this.rows = [];
-        for (let i = 0; i < gpu_count; i++) {
-            const gpu_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu"];
-            const vram_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_vram"];
-            const fan_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_fan"];
-            const power_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_power"];
-            const hash_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_" + mining_algorithm];
-            const gpu_model = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu_model"].state?.replace("GeForce ", "").replace("RTX ", "");
-            const gpu_vendor_id = states["sensor." + this.miner_name + "_gpu_" + i + "_vendor_id"].state?.toUpperCase();
-            const gpu_vendor = PCIE_VENDOR_IDS[gpu_vendor_id] ?? gpu_vendor_id;
+                const gpu_color = gpu_sensor?.state >= gpu_max_temp ? "red" : gpu_sensor?.state < gpu_warn_temp ? "green" : "yellow";
+                const vram_color = vram_sensor?.state >= vram_max_temp ? "red" : vram_sensor?.state < vram_warn_temp ? "green" : "yellow";
+                const fan_color = fan_sensor?.state >= fan_speed_warn ? "yellow" : "white";
 
-            const gpu_color = gpu_sensor?.state >= gpu_max_temp ? "red" : gpu_sensor?.state < gpu_warn_temp ? "green" : "yellow";
-            const vram_color = vram_sensor?.state >= vram_max_temp ? "red" : vram_sensor?.state < vram_warn_temp ? "green" : "yellow";
-            const fan_color = fan_sensor?.state >= fan_speed_warn ? "yellow" : "white";
+                const gpu = !gpu_sensor?.state ? "Unavailable" : gpu_sensor.state + gpu_sensor.attributes.unit_of_measurement;
+                const vram = !vram_sensor?.state ? "Unavailable" : vram_sensor.state + vram_sensor.attributes.unit_of_measurement;
+                const fan = !fan_sensor?.state ? "Unavailable" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
+                const power = !power_sensor?.state ? "Unavailable" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
+                const hashrate = !hash_sensor?.state || hash_sensor?.state === "Unavailable" ? "Unavailable" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
+                this.rows.push(
+                    `<tr>
+                        <td style="padding:5px;">${i}</td>
+                        <td style="padding:5px;">${gpu_model}</td>
+                        <td style="padding:5px;">${gpu_vendor}</td>
+                        <td style="padding:5px; color:${gpu_color};">${gpu}</td>
+                        <td style="padding:5px; color:${vram_color};">${vram}</td>
+                        <td style="padding:5px; color:${fan_color};">${fan}</td>
+                        <td style="padding:5px;">${power}</td>
+                        <td style="padding:5px;">${hashrate}</td>
+                    </tr>`
+                );
+            }
+            const table_top = `<table style="width: 100%; text-align-last: right;">
+                <tr>
+                    <th scope="col" style="padding:5px;">ID</th>
+                    <th scope="col" style="padding:5px;">Model</th>
+                    <th scope="col" style="padding:5px;">Vendor</th>
+                    <th scope="col" style="padding:5px;">GPU</th>
+                    <th scope="col" style="padding:5px;">VRAM</th>
+                    <th scope="col" style="padding:5px;">Fans</th>
+                    <th scope="col" style="padding:5px;">Power</th>
+                    <th scope="col" style="padding:5px;">Hashrate</th>
+                </tr>`;
+            let table_body = "";
+            for (let item of this.rows) {
+                table_body = table_body + item;
+            }
+            const table_end = `</table>`;
 
-            const gpu = gpu_sensor?.state === "Unavailable" ? "Unavailable" : gpu_sensor.state + gpu_sensor.attributes.unit_of_measurement;
-            const vram = vram_sensor?.state === "Unavailable" ? "Unavailable" : vram_sensor.state + vram_sensor.attributes.unit_of_measurement;
-            const fan = fan_sensor?.state === "Unavailable" ? "Unavailable" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
-            const power = power_sensor?.state === "Unavailable" ? "Unavailable" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
-            const hashrate = !hash_sensor?.state || hash_sensor?.state === "Unavailable" ? "Unavailable" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
-            this.rows.push(
-                `<tr>
-                    <td style="padding:5px;">${i}</td>
-                    <td style="padding:5px;">${gpu_model}</td>
-                    <td style="padding:5px;">${gpu_vendor}</td>
-                    <td style="padding:5px; color:${gpu_color};">${gpu}</td>
-                    <td style="padding:5px; color:${vram_color};">${vram}</td>
-                    <td style="padding:5px; color:${fan_color};">${fan}</td>
-                    <td style="padding:5px;">${power}</td>
-                    <td style="padding:5px;">${hashrate}</td>
-                </tr>`
-            );
-        }
-        const table_top = `<table style="width: 100%; text-align-last: right;">
+            const combined_table = `<table style="float: right; text-align-last: right;">
             <tr>
-                <th scope="col" style="padding:5px;">ID</th>
-                <th scope="col" style="padding:5px;">Model</th>
-                <th scope="col" style="padding:5px;">Vendor</th>
-                <th scope="col" style="padding:5px;">GPU</th>
-                <th scope="col" style="padding:5px;">VRAM</th>
-                <th scope="col" style="padding:5px;">Fans</th>
+                <th scope="col" style="padding:5px;">CPU</th>
+                <th scope="col" style="padding:5px;">RAM</th>
                 <th scope="col" style="padding:5px;">Power</th>
                 <th scope="col" style="padding:5px;">Hashrate</th>
-            </tr>`;
-        let table_body = "";
-        for (let item of this.rows) {
-            table_body = table_body + item;
+            </tr>
+            <tr>
+                <td style="padding:5px;">${miner_cpu}</td>
+                <td style="padding:5px;">${miner_ram}</td>
+                <td style="padding:5px;">${miner_power}</td>
+                <td style="padding:5px;">${miner_hashrate}</td>
+            </tr>
+            </table>`;
+
+            this.content.innerHTML = combined_table + table_top + table_body + table_end;
+        } catch (error) {
+            this.content.innerHTML = "<p> An error occurred, please check if you are using the correct version of the Nicehash Excavator Monitor integration </p>"
         }
-        const table_end = `</table>`;
-
-        const combined_table = `<table style="float: right; text-align-last: right;">
-        <tr>
-            <th scope="col" style="padding:5px;">CPU</th>
-            <th scope="col" style="padding:5px;">RAM</th>
-            <th scope="col" style="padding:5px;">Power</th>
-            <th scope="col" style="padding:5px;">Hashrate</th>
-        </tr>
-        <tr>
-            <td style="padding:5px;">${miner_cpu}</td>
-            <td style="padding:5px;">${miner_ram}</td>
-            <td style="padding:5px;">${miner_power}</td>
-            <td style="padding:5px;">${miner_hashrate}</td>
-        </tr>
-        </table>`;
-
-        this.content.innerHTML = combined_table + table_top + table_body + table_end;
     }
 
     setConfig(config) {
