@@ -7,7 +7,7 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
 
     set hass(hass) {
         const states = hass.states;
-
+        
         this.display_name = this.config.miner_name;
         this.miner_name = this.config.miner_name.replace(" ", "_").toLowerCase();
 
@@ -33,6 +33,15 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
         let vram_warn_temp = this.config.vram_warn_temp ?? 90;
         let vram_max_temp = this.config.vram_max_temp ?? 95;
         let fan_speed_warn = this.config.fan_speed_warn ?? 98;
+
+        const miner_power_sensor = states["sensor." + this.miner_name + "_power"];
+        const miner_hash_sensor = states["sensor." + this.miner_name + "_" + mining_algorithm];
+        const miner_cpu_sensor = states["sensor." + this.miner_name + "_cpu"];
+        const miner_ram_sensor = states["sensor." + this.miner_name + "_ram"];
+        const miner_power = miner_power_sensor?.state === "Unavailable" ? "Unavailable" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
+        const miner_hashrate = !miner_hash_sensor?.state || miner_hash_sensor?.state === "Unavailable" ? "Unavailable" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
+        const miner_cpu = miner_cpu_sensor?.state === "Unavailable" ? "Unavailable" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
+        const miner_ram = miner_ram_sensor?.state === "Unavailable" ? "Unavailable" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
 
         this.rows = [];
         for (let i = 0; i < gpu_count; i++) {
@@ -67,7 +76,7 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                 </tr>`
             );
         }
-        const table_top = `<table>
+        const table_top = `<table style="width: 100%; text-align-last: right;">
             <tr>
                 <th scope="col" style="padding:5px;">ID</th>
                 <th scope="col" style="padding:5px;">Model</th>
@@ -84,7 +93,22 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
         }
         const table_end = `</table>`;
 
-        this.content.innerHTML = table_top + table_body + table_end;
+        const combined_table = `<table style="float: right; text-align-last: right;">
+        <tr>
+            <th scope="col" style="padding:5px;">CPU</th>
+            <th scope="col" style="padding:5px;">RAM</th>
+            <th scope="col" style="padding:5px;">Power</th>
+            <th scope="col" style="padding:5px;">Hashrate</th>
+        </tr>
+        <tr>
+            <td style="padding:5px;">${miner_cpu}</td>
+            <td style="padding:5px;">${miner_ram}</td>
+            <td style="padding:5px;">${miner_power}</td>
+            <td style="padding:5px;">${miner_hashrate}</td>
+        </tr>
+        </table>`;
+
+        this.content.innerHTML = combined_table + table_top + table_body + table_end;
     }
 
     setConfig(config) {
