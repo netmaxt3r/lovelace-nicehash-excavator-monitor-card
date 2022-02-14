@@ -34,4 +34,4 @@ Customization:
 - fan_speed_warn (default: 98)
 - mining_algorithm (default: daggerhashimoto)
 
-![Config](https://github.com/MesserschmittX/lovelace-nicehash-excavator-monitor-card/blob/bdb1e7395937f5c307aeb4f9e99d5ee0f4a79d0e/images/card_config.png)
+![Config](https://github.com/MesserschmittX/lovelace-nicehash-excavator-monitor-card/blob/02102895984b79f248cf21d85cb5419e64480dbf/images/card_config.png)
