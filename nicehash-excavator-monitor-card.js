@@ -7,7 +7,7 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
 
     set hass(hass) {
         const states = hass.states;
-        
+
         this.display_name = this.config.miner_name;
         this.miner_name = this.config.miner_name.replace(" ", "_").toLowerCase();
 
@@ -15,6 +15,9 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
             this.innerHTML = `
                 <ha-card header="${this.display_name}">
                     <div class="card-content"></div>
+                    <style>
+                        ${styles}
+                    </style>
                 </ha-card>
             `;
             this.content = this.querySelector("div");
@@ -34,17 +37,9 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
             let vram_warn_temp = this.config.vram_warn_temp ?? 90;
             let vram_max_temp = this.config.vram_max_temp ?? 95;
             let fan_speed_warn = this.config.fan_speed_warn ?? 98;
+            let total_power_warn = this.config.total_power_warn;
+            let total_min_hashrate_warn = this.config.total_min_hashrate_warn;
 
-            const miner_power_sensor = states["sensor." + this.miner_name + "_power"];
-            const miner_hash_sensor = states["sensor." + this.miner_name + "_" + mining_algorithm];
-            const miner_cpu_sensor = states["sensor." + this.miner_name + "_cpu"];
-            const miner_ram_sensor = states["sensor." + this.miner_name + "_ram"];
-        
-            const miner_power = !miner_power_sensor?.state ? "Unavailable" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
-            const miner_hashrate = !miner_hash_sensor?.state || miner_hash_sensor?.state === "Unavailable" ? "Unavailable" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
-            const miner_cpu = !miner_cpu_sensor?.state ? "Unavailable" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
-            const miner_ram = !miner_ram_sensor?.state ? "Unavailable" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
-            
             this.rows = [];
             for (let i = 0; i < gpu_count; i++) {
                 const gpu_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu"];
@@ -65,54 +60,82 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                 const fan = !fan_sensor?.state ? "Unavailable" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
                 const power = !power_sensor?.state ? "Unavailable" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
                 const hashrate = !hash_sensor?.state || hash_sensor?.state === "Unavailable" ? "Unavailable" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
-                this.rows.push(
-                    `<tr>
-                        <td style="padding:5px;">${i}</td>
-                        <td style="padding:5px;">${gpu_model}</td>
-                        <td style="padding:5px;">${gpu_vendor}</td>
-                        <td style="padding:5px; color:${gpu_color};">${gpu}</td>
-                        <td style="padding:5px; color:${vram_color};">${vram}</td>
-                        <td style="padding:5px; color:${fan_color};">${fan}</td>
-                        <td style="padding:5px;">${power}</td>
-                        <td style="padding:5px;">${hashrate}</td>
-                    </tr>`
-                );
+
+                let row = `<tr>`;
+                if (this.config.gpu_id) row += `<td class="table_element tooltip">${i}<span class="tooltiptext">Tooltip text</span></td>`;
+                if (this.config.gpu_model) row += `<td class="table_element tooltip">${gpu_model}</td>`;
+                if (this.config.gpu_vendor) row += `<td class="table_element tooltip">${gpu_vendor}`;
+                if (this.config.gpu_temp)
+                    row += `<td class="table_element tooltip" style="color:${gpu_color};">${gpu}<span class="tooltiptext">updated: ${new Date(gpu_sensor.last_updated).toLocaleString()}</span></td>`;
+                if (this.config.vram_temp)
+                    row += `<td class="table_element tooltip" style="color:${vram_color};">${vram}<span class="tooltiptext">updated: ${new Date(
+                        vram_sensor.last_updated
+                    ).toLocaleString()}</span></td>`;
+                if (this.config.fan_speed)
+                    row += `<td class="table_element tooltip" style="color:${fan_color};">${fan}<span class="tooltiptext">updated: ${new Date(fan_sensor.last_updated).toLocaleString()}</span></td>`;
+                if (this.config.gpu_power) row += `<td class="table_element tooltip">${power}<span class="tooltiptext">updated: ${new Date(power_sensor.last_updated).toLocaleString()}</span></td>`;
+                if (this.config.gpu_hashrate)
+                    row += `<td class="table_element tooltip">${hashrate}<span class="tooltiptext">updated: ${new Date(hash_sensor.last_updated).toLocaleString()}</span></td>`;
+                row += `</tr>`;
+
+                this.rows.push(row);
             }
-            const table_top = `<table style="width: 100%; text-align-last: right;">
-                <tr>
-                    <th scope="col" style="padding:5px;">ID</th>
-                    <th scope="col" style="padding:5px;">Model</th>
-                    <th scope="col" style="padding:5px;">Vendor</th>
-                    <th scope="col" style="padding:5px;">GPU</th>
-                    <th scope="col" style="padding:5px;">VRAM</th>
-                    <th scope="col" style="padding:5px;">Fans</th>
-                    <th scope="col" style="padding:5px;">Power</th>
-                    <th scope="col" style="padding:5px;">Hashrate</th>
-                </tr>`;
+            let table_top = `<table class="gpu_table"><tr>`;
+            if (this.config.gpu_id) table_top += `<th scope="col" class="table_element">ID</th>`;
+            if (this.config.gpu_model) table_top += `<th scope="col" class="table_element">Model</th>`;
+            if (this.config.gpu_vendor) table_top += `<th scope="col" class="table_element">Vendor</th>`;
+            if (this.config.gpu_temp) table_top += `<th scope="col" class="table_element">GPU</th>`;
+            if (this.config.vram_temp) table_top += `<th scope="col" class="table_element">VRAM</th>`;
+            if (this.config.fan_speed) table_top += `<th scope="col" class="table_element">Fans</th>`;
+            if (this.config.gpu_power) table_top += `<th scope="col" class="table_element">Power</th>`;
+            if (this.config.gpu_hashrate) table_top += `<th scope="col" class="table_element">Hashrate</th>`;
+            table_top += `</tr>`;
             let table_body = "";
             for (let item of this.rows) {
                 table_body = table_body + item;
             }
             const table_end = `</table>`;
 
-            const combined_table = `<table style="float: right; text-align-last: right;">
-            <tr>
-                <th scope="col" style="padding:5px;">CPU</th>
-                <th scope="col" style="padding:5px;">RAM</th>
-                <th scope="col" style="padding:5px;">Power</th>
-                <th scope="col" style="padding:5px;">Hashrate</th>
-            </tr>
-            <tr>
-                <td style="padding:5px;">${miner_cpu}</td>
-                <td style="padding:5px;">${miner_ram}</td>
-                <td style="padding:5px;">${miner_power}</td>
-                <td style="padding:5px;">${miner_hashrate}</td>
-            </tr>
-            </table>`;
+            let combined_table = "";
+            if (this.config.combined_stats) {
+                const miner_power_sensor = states["sensor." + this.miner_name + "_power"];
+                const miner_hash_sensor = states["sensor." + this.miner_name + "_" + mining_algorithm];
+                const miner_cpu_sensor = states["sensor." + this.miner_name + "_cpu"];
+                const miner_ram_sensor = states["sensor." + this.miner_name + "_ram"];
+
+                const miner_power = !miner_power_sensor?.state ? "Unavailable" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
+                const miner_hashrate =
+                    !miner_hash_sensor?.state || miner_hash_sensor?.state === "Unavailable" ? "Unavailable" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
+                const miner_cpu = !miner_cpu_sensor?.state ? "Unavailable" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
+                const miner_ram = !miner_ram_sensor?.state ? "Unavailable" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
+
+                const total_power_color = miner_power_sensor?.state >= total_power_warn ? "yellow" : "white";
+                const total_hashrate_color = miner_hash_sensor?.state < total_min_hashrate_warn ? "yellow" : "white";
+
+                combined_table += `<table class="miner_table"><tr>`;
+                if (this.config.cpu) combined_table += `<th scope="col" class="table_element">CPU</th>`;
+                if (this.config.ram) combined_table += `<th scope="col" class="table_element">RAM</th>`;
+                if (this.config.power) combined_table += `<th scope="col" class="table_element">Power</th>`;
+                if (this.config.hashrate) combined_table += `<th scope="col" class="table_element">Hashrate</th>`;
+                combined_table += `</tr><tr>`;
+                if (this.config.cpu)
+                    combined_table += `<td class="table_element tooltip">${miner_cpu}<span class="tooltiptext">updated: ${new Date(miner_cpu_sensor.last_updated).toLocaleString()}</span></td>`;
+                if (this.config.ram)
+                    combined_table += `<td class="table_element tooltip">${miner_ram}<span class="tooltiptext">updated: ${new Date(miner_ram_sensor.last_updated).toLocaleString()}</span></td>`;
+                if (this.config.power)
+                    combined_table += `<td class="table_element tooltip" style="color:${total_power_color};">${miner_power}<span class="tooltiptext">updated: ${new Date(
+                        miner_power_sensor.last_updated
+                    ).toLocaleString()}</span></td>`;
+                if (this.config.hashrate)
+                    combined_table += `<td class="table_element tooltip" style="color:${total_hashrate_color};">${miner_hashrate}<span class="tooltiptext">updated: ${new Date(
+                        miner_hash_sensor.last_updated
+                    ).toLocaleString()}</span></td>`;
+                combined_table += `</tr></table>`;
+            }
 
             this.content.innerHTML = combined_table + table_top + table_body + table_end;
         } catch (error) {
-            this.content.innerHTML = "<p> An error occurred, please check if you are using the correct version of the Nicehash Excavator Monitor integration </p>"
+            this.content.innerHTML = "<p> An error occurred, please check if you are using the correct version of the Nicehash Excavator Monitor integration </p>";
         }
     }
 
@@ -145,3 +168,62 @@ const PCIE_VENDOR_IDS = {
     2204: "NVIDIA?",
     2206: "NVIDIA?",
 };
+const styles = `
+
+gpu_table {
+  width: 100%;
+}
+
+miner_table {
+  float: right;
+}
+
+table {
+  text-align-last: right;
+}
+
+.table_element {
+    padding:5px;
+}
+
+.tooltip {
+  position: relative;
+  width: max-content;
+}
+
+.tooltip .tooltiptext {
+  text-align-last: center;
+  visibility: hidden;
+  width: 120px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip .tooltiptext::after {
+  text-align-last: center;
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}`;
