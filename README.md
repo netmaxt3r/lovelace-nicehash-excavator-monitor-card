@@ -1,4 +1,5 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 ![HACS Action](https://github.com/MesserschmittX/hacs-nicehash-excavator/actions/workflows/hacs.yml/badge.svg?style=for-the-badge)
 
 
@@ -33,5 +34,22 @@ Customization:
 - vram_max_temp (default: 95)
 - fan_speed_warn (default: 98)
 - mining_algorithm (default: daggerhashimoto)
+- total_power_warn: (no default)
+- total_min_hashrate_warn: (no default)
 
 ![Config](https://github.com/MesserschmittX/lovelace-nicehash-excavator-monitor-card/blob/02102895984b79f248cf21d85cb5419e64480dbf/images/card_config.png)
+
+disable sensors with false
+- gpu_id: (default: true)
+- gpu_model: (default: true)
+- gpu_vendor: (default: true)
+- gpu_temp: (default: true)
+- vram_temp: (default: true)
+- fan_speed: (default: true)
+- gpu_power: (default: true)
+- gpu_hashrate: (default: true)
+- combined_stats: (default: true)
+- cpu: (default: true)
+- ram: (default: true)
+- power: (default: true)
+- hashrate: (default: true)
