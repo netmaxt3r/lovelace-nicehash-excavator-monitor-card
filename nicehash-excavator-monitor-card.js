@@ -6,6 +6,11 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
     miner_name = "";
 
     set hass(hass) {
+        const text_color = hass.themes.darkMode ? "white" : "black";
+        const ok_color = hass.themes.darkMode ? "green" : "green";
+        const warn_color = hass.themes.darkMode ? "yellow" : "#ffc800";
+        const error_color = hass.themes.darkMode ? "red" : "red";
+
         const states = hass.states;
 
         this.display_name = this.config.miner_name;
@@ -51,15 +56,15 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                 const gpu_vendor_id = states["sensor." + this.miner_name + "_gpu_" + i + "_vendor_id"].state?.toUpperCase();
                 const gpu_vendor = PCIE_VENDOR_IDS[gpu_vendor_id] ?? gpu_vendor_id;
 
-                const gpu_color = gpu_sensor?.state >= gpu_max_temp ? "red" : gpu_sensor?.state < gpu_warn_temp ? "green" : "yellow";
-                const vram_color = vram_sensor?.state >= vram_max_temp ? "red" : vram_sensor?.state < vram_warn_temp ? "green" : "yellow";
-                const fan_color = fan_sensor?.state >= fan_speed_warn ? "yellow" : "white";
+                const gpu_color = gpu_sensor?.state >= gpu_max_temp ? error_color : gpu_sensor?.state < gpu_warn_temp ? ok_color : warn_color;
+                const vram_color = vram_sensor?.state >= vram_max_temp ? error_color : vram_sensor?.state < vram_warn_temp ? ok_color : warn_color;
+                const fan_color = fan_sensor?.state >= fan_speed_warn ? warn_color : text_color;
 
-                const gpu = !gpu_sensor?.state ? "Unavailable" : gpu_sensor.state + gpu_sensor.attributes.unit_of_measurement;
-                const vram = !vram_sensor?.state ? "Unavailable" : vram_sensor.state + vram_sensor.attributes.unit_of_measurement;
-                const fan = !fan_sensor?.state ? "Unavailable" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
-                const power = !power_sensor?.state ? "Unavailable" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
-                const hashrate = !hash_sensor?.state || hash_sensor?.state === "Unavailable" ? "Unavailable" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
+                const gpu = !gpu_sensor?.state ? "NaN" : gpu_sensor.state + gpu_sensor.attributes.unit_of_measurement;
+                const vram = !vram_sensor?.state ? "NaN" : vram_sensor.state + vram_sensor.attributes.unit_of_measurement;
+                const fan = !fan_sensor?.state ? "NaN" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
+                const power = !power_sensor?.state ? "NaN" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
+                const hashrate = !hash_sensor?.state || hash_sensor?.state === "NaN" ? "NaN" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
 
                 let row = `<tr>`;
                 if (this.config.gpu_id !== false) row += `<td class="table_element tooltip">${i}<span class="tooltiptext">Tooltip text</span></td>`;
@@ -104,14 +109,13 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                 const miner_cpu_sensor = states["sensor." + this.miner_name + "_cpu"];
                 const miner_ram_sensor = states["sensor." + this.miner_name + "_ram"];
 
-                const miner_power = !miner_power_sensor?.state ? "Unavailable" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
-                const miner_hashrate =
-                    !miner_hash_sensor?.state || miner_hash_sensor?.state === "Unavailable" ? "Unavailable" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
-                const miner_cpu = !miner_cpu_sensor?.state ? "Unavailable" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
-                const miner_ram = !miner_ram_sensor?.state ? "Unavailable" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
+                const miner_power = !miner_power_sensor?.state ? "NaN" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
+                const miner_hashrate = !miner_hash_sensor?.state || miner_hash_sensor?.state === "NaN" ? "NaN" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
+                const miner_cpu = !miner_cpu_sensor?.state ? "NaN" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
+                const miner_ram = !miner_ram_sensor?.state ? "NaN" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
 
-                const total_power_color = miner_power_sensor?.state >= total_power_warn ? "yellow" : "white";
-                const total_hashrate_color = miner_hash_sensor?.state < total_min_hashrate_warn ? "yellow" : "white";
+                const total_power_color = miner_power_sensor?.state >= total_power_warn ? warn_color : text_color;
+                const total_hashrate_color = miner_hash_sensor?.state < total_min_hashrate_warn ? warn_color : text_color;
 
                 combined_table += `<table class="miner_table"><tr>`;
                 if (this.config.cpu !== false) combined_table += `<th scope="col" class="table_element">CPU</th>`;
@@ -169,6 +173,7 @@ const PCIE_VENDOR_IDS = {
     2204: "NVIDIA?",
     2206: "NVIDIA?",
 };
+
 const styles = `
 
 table {
@@ -184,7 +189,7 @@ table {
 }
 
 .table_element {
-    padding:5px;
+  padding:5px;
 }
 
 .tooltip {
