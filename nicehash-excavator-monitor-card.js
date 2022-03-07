@@ -60,28 +60,28 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                 const vram_color = vram_sensor?.state >= vram_max_temp ? error_color : vram_sensor?.state < vram_warn_temp ? ok_color : warn_color;
                 const fan_color = fan_sensor?.state >= fan_speed_warn ? warn_color : text_color;
 
-                const gpu = !gpu_sensor?.state ? "NaN" : gpu_sensor.state + gpu_sensor.attributes.unit_of_measurement;
-                const vram = !vram_sensor?.state ? "NaN" : vram_sensor.state + vram_sensor.attributes.unit_of_measurement;
-                const fan = !fan_sensor?.state ? "NaN" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
-                const power = !power_sensor?.state ? "NaN" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
-                const hashrate = !hash_sensor?.state || hash_sensor?.state === "NaN" ? "NaN" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
+                const gpu = gpu_sensor?.state === "unavailable" ? "NaN" : gpu_sensor.state + gpu_sensor.attributes.unit_of_measurement;
+                const vram = vram_sensor?.state === "unavailable" ? "NaN" : vram_sensor.state + vram_sensor.attributes.unit_of_measurement;
+                const fan = fan_sensor?.state === "unavailable" ? "NaN" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
+                const power = power_sensor?.state === "unavailable" ? "NaN" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
+                const hashrate = hash_sensor?.state === "unavailable" ? "NaN" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
 
                 let row = `<tr>`;
-                if (this.config.gpu_id !== false) row += `<td class="table_element tooltip">${i}<span class="tooltiptext">Tooltip text</span></td>`;
+                if (this.config.gpu_id !== false) row += `<td class="table_element tooltip">${i}</td>`;
                 if (this.config.gpu_model !== false) row += `<td class="table_element tooltip">${gpu_model}</td>`;
                 if (this.config.gpu_vendor !== false) row += `<td class="table_element tooltip">${gpu_vendor}`;
                 if (this.config.gpu_temp !== false)
-                    row += `<td class="table_element tooltip" style="color:${gpu_color};">${gpu}<span class="tooltiptext">updated: ${new Date(gpu_sensor.last_updated).toLocaleString()}</span></td>`;
+                    row += `<td class="table_element tooltip" style="color:${gpu_color};">${gpu}<span class="tooltip-text">updated: ${new Date(gpu_sensor.last_updated).toLocaleString()}</span></td>`;
                 if (this.config.vram_temp !== false)
-                    row += `<td class="table_element tooltip" style="color:${vram_color};">${vram}<span class="tooltiptext">updated: ${new Date(
+                    row += `<td class="table_element tooltip" style="color:${vram_color};">${vram}<span class="tooltip-text">updated: ${new Date(
                         vram_sensor.last_updated
                     ).toLocaleString()}</span></td>`;
                 if (this.config.fan_speed !== false)
-                    row += `<td class="table_element tooltip" style="color:${fan_color};">${fan}<span class="tooltiptext">updated: ${new Date(fan_sensor.last_updated).toLocaleString()}</span></td>`;
+                    row += `<td class="table_element tooltip" style="color:${fan_color};">${fan}<span class="tooltip-text">updated: ${new Date(fan_sensor.last_updated).toLocaleString()}</span></td>`;
                 if (this.config.gpu_power !== false)
-                    row += `<td class="table_element tooltip">${power}<span class="tooltiptext">updated: ${new Date(power_sensor.last_updated).toLocaleString()}</span></td>`;
+                    row += `<td class="table_element tooltip">${power}<span class="tooltip-text">updated: ${new Date(power_sensor.last_updated).toLocaleString()}</span></td>`;
                 if (this.config.gpu_hashrate !== false)
-                    row += `<td class="table_element tooltip">${hashrate}<span class="tooltiptext">updated: ${new Date(hash_sensor.last_updated).toLocaleString()}</span></td>`;
+                    row += `<td class="table_element tooltip">${hashrate}<span class="tooltip-text">updated: ${new Date(hash_sensor.last_updated).toLocaleString()}</span></td>`;
                 row += `</tr>`;
 
                 this.rows.push(row);
@@ -109,10 +109,10 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                 const miner_cpu_sensor = states["sensor." + this.miner_name + "_cpu"];
                 const miner_ram_sensor = states["sensor." + this.miner_name + "_ram"];
 
-                const miner_power = !miner_power_sensor?.state ? "NaN" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
-                const miner_hashrate = !miner_hash_sensor?.state || miner_hash_sensor?.state === "NaN" ? "NaN" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
-                const miner_cpu = !miner_cpu_sensor?.state ? "NaN" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
-                const miner_ram = !miner_ram_sensor?.state ? "NaN" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
+                const miner_power = miner_power_sensor?.state === "unavailable" ? "NaN" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
+                const miner_hashrate = miner_hash_sensor?.state === "unavailable" ? "NaN" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
+                const miner_cpu = miner_cpu_sensor?.state === "unavailable" ? "NaN" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
+                const miner_ram = miner_ram_sensor?.state === "unavailable" ? "NaN" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
 
                 const total_power_color = miner_power_sensor?.state >= total_power_warn ? warn_color : text_color;
                 const total_hashrate_color = miner_hash_sensor?.state < total_min_hashrate_warn ? warn_color : text_color;
@@ -124,15 +124,15 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                 if (this.config.hashrate !== false) combined_table += `<th scope="col" class="table_element">Hashrate</th>`;
                 combined_table += `</tr><tr>`;
                 if (this.config.cpu !== false)
-                    combined_table += `<td class="table_element tooltip">${miner_cpu}<span class="tooltiptext">updated: ${new Date(miner_cpu_sensor.last_updated).toLocaleString()}</span></td>`;
+                    combined_table += `<td class="table_element tooltip">${miner_cpu}<span class="tooltip-text">updated: ${new Date(miner_cpu_sensor.last_updated).toLocaleString()}</span></td>`;
                 if (this.config.ram !== false)
-                    combined_table += `<td class="table_element tooltip">${miner_ram}<span class="tooltiptext">updated: ${new Date(miner_ram_sensor.last_updated).toLocaleString()}</span></td>`;
+                    combined_table += `<td class="table_element tooltip">${miner_ram}<span class="tooltip-text">updated: ${new Date(miner_ram_sensor.last_updated).toLocaleString()}</span></td>`;
                 if (this.config.power !== false)
-                    combined_table += `<td class="table_element tooltip" style="color:${total_power_color};">${miner_power}<span class="tooltiptext">updated: ${new Date(
+                    combined_table += `<td class="table_element tooltip" style="color:${total_power_color};">${miner_power}<span class="tooltip-text">updated: ${new Date(
                         miner_power_sensor.last_updated
                     ).toLocaleString()}</span></td>`;
                 if (this.config.hashrate !== false)
-                    combined_table += `<td class="table_element tooltip" style="color:${total_hashrate_color};">${miner_hashrate}<span class="tooltiptext">updated: ${new Date(
+                    combined_table += `<td class="table_element tooltip" style="color:${total_hashrate_color};">${miner_hashrate}<span class="tooltip-text">updated: ${new Date(
                         miner_hash_sensor.last_updated
                     ).toLocaleString()}</span></td>`;
                 combined_table += `</tr></table>`;
@@ -197,7 +197,7 @@ table {
   width: max-content;
 }
 
-.tooltip .tooltiptext {
+.tooltip .tooltip-text {
   text-align-last: center;
   visibility: hidden;
   width: 120px;
@@ -217,7 +217,7 @@ table {
   transition: opacity 0.3s;
 }
 
-.tooltip .tooltiptext::after {
+.tooltip .tooltip-text::after {
   text-align-last: center;
   content: "";
   position: absolute;
@@ -229,7 +229,7 @@ table {
   border-color: #555 transparent transparent transparent;
 }
 
-.tooltip:hover .tooltiptext {
+.tooltip:hover .tooltip-text {
   visibility: visible;
   opacity: 1;
 }`;
