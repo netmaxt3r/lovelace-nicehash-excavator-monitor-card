@@ -52,19 +52,22 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                 const fan_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_fan"];
                 const power_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_power"];
                 const hash_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_" + mining_algorithm];
-                const gpu_model = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu_model"].state?.replace("GeForce ", "").replace("RTX ", "");
+                const gpu_model_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu_model"].state?.replace("GeForce ", "").replace("RTX ", "");
                 const gpu_vendor_id = states["sensor." + this.miner_name + "_gpu_" + i + "_vendor_id"].state?.toUpperCase();
-                const gpu_vendor = PCIE_VENDOR_IDS[gpu_vendor_id] ?? gpu_vendor_id;
+                const gpu_vendor_sensor = PCIE_VENDOR_IDS[gpu_vendor_id] ?? gpu_vendor_id;
+
+                const gpu_model = gpu_model_sensor.toLowerCase() === "unavailable" ? "NaN" : gpu_model_sensor;
+                const gpu_vendor = gpu_vendor_sensor.toLowerCase() === "unavailable" ? "NaN" : gpu_vendor_sensor;
 
                 const gpu_color = gpu_sensor?.state >= gpu_max_temp ? error_color : gpu_sensor?.state < gpu_warn_temp ? ok_color : warn_color;
                 const vram_color = vram_sensor?.state >= vram_max_temp ? error_color : vram_sensor?.state < vram_warn_temp ? ok_color : warn_color;
                 const fan_color = fan_sensor?.state >= fan_speed_warn ? warn_color : text_color;
 
-                const gpu = gpu_sensor?.state === "unavailable" ? "NaN" : gpu_sensor.state + gpu_sensor.attributes.unit_of_measurement;
-                const vram = vram_sensor?.state === "unavailable" ? "NaN" : vram_sensor.state + vram_sensor.attributes.unit_of_measurement;
-                const fan = fan_sensor?.state === "unavailable" ? "NaN" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
-                const power = power_sensor?.state === "unavailable" ? "NaN" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
-                const hashrate = hash_sensor?.state === "unavailable" ? "NaN" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
+                const gpu = gpu_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : gpu_sensor.state + gpu_sensor.attributes.unit_of_measurement;
+                const vram = vram_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : vram_sensor.state + vram_sensor.attributes.unit_of_measurement;
+                const fan = fan_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
+                const power = power_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
+                const hashrate = hash_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
 
                 let row = `<tr>`;
                 if (this.config.gpu_id !== false) row += `<td class="table_element tooltip">${i}</td>`;
