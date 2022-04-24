@@ -37,7 +37,7 @@ Key | Description | Default
 `vram_max_temp` | VRAM temp will be colored red above this temperature | `95`
 `fan_speed_warn` | Fan speed will be colored yellow above this percentage | `98`
 `mining_algorithm` | Mining algorithm that is shown | `daggerhashimoto`
-`total_power_warn` | Mining rig power will be colored yellow below this value | `None`
+`total_power_warn` | Mining rig power will be colored yellow above this value | `None`
 `total_min_hashrate_warn` | Mining rig hashrate be colored yellow below this value | `None`
 `gpu_id` | Show GPU ID | `true`
 `gpu_model` | Show GPU model | `true`
