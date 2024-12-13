@@ -29,7 +29,8 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
         }
 
         try {
-            const gpu_count = states["sensor." + this.miner_name + "_gpu_count"]?.state;
+            const count_id = "sensor." + this.miner_name + "_gpu_count";
+            const gpu_count = states[count_id]?.state;
 
             if (!(gpu_count >= 0)) {
                 this.content.innerHTML = "<p> No GPUs found for this miner name </p>";
@@ -46,14 +47,19 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
             let total_min_hashrate_warn = this.config.total_min_hashrate_warn;
 
             this.rows = [];
-            for (let i = 0; i < gpu_count; i++) {
-                const gpu_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu"];
-                const vram_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_vram"];
-                const fan_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_fan"];
-                const power_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_power"];
-                const hash_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_" + mining_algorithm];
-                const gpu_model_sensor = states["sensor." + this.miner_name + "_gpu_" + i + "_gpu_model"].state?.replace("GeForce ", "").replace("RTX ", "");
-                const gpu_vendor_id = states["sensor." + this.miner_name + "_gpu_" + i + "_vendor_id"].state?.toUpperCase();
+            const miner_id = hass.entities[count_id].device_id
+            const miner = hass.devices[miner_id];
+            const gpus = Object.values(hass.devices).filter(d => d.via_device_id == miner_id)
+
+            for (const gpu_device of gpus) {
+                const entities = Object.values(hass.entities).filter(e => e.device_id == gpu_device.id && e.platform == "nicehash_excavator")
+                const gpu_sensor = states[getEntityByPrefix(entities,"gpu")];
+                const vram_sensor = states[getEntityByPrefix(entities,"vram")];
+                const fan_sensor = states[getEntityByPrefix(entities,"fan")];
+                const power_sensor = states[getEntityByPrefix(entities,"power")];
+                const hash_sensor = states[getEntityByPrefix(entities,mining_algorithm)];
+                const gpu_model_sensor = states[getEntityByPrefix(entities,"gpu_model")].state?.replace("GeForce ", "").replace("RTX ", "");
+                const gpu_vendor_id = states[getEntityByPrefix(entities,"vendor_id")].state?.toUpperCase();
                 const gpu_vendor_sensor = PCIE_VENDOR_IDS[gpu_vendor_id] ?? gpu_vendor_id;
 
                 const gpu_model = gpu_model_sensor.toLowerCase() === "unavailable" ? "NaN" : gpu_model_sensor;
@@ -67,10 +73,12 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                 const vram = vram_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : vram_sensor.state + vram_sensor.attributes.unit_of_measurement;
                 const fan = fan_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : fan_sensor.state + fan_sensor.attributes.unit_of_measurement;
                 const power = power_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : power_sensor.state + power_sensor.attributes.unit_of_measurement;
-                const hashrate = hash_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement;
+                const hashrate = hash_sensor ? (
+                    hash_sensor?.state.toLowerCase() === "unavailable" ? "NaN" : hash_sensor.state + hash_sensor.attributes.unit_of_measurement) :
+                    "-";
 
                 let row = `<tr>`;
-                if (this.config.gpu_id !== false) row += `<td class="table_element tooltip">${i}</td>`;
+                if (this.config.gpu_id !== false) row += `<td class="table_element tooltip">${ gpu_device.name_by_user ?? gpu_device.name}</td>`;
                 if (this.config.gpu_model !== false) row += `<td class="table_element tooltip">${gpu_model}</td>`;
                 if (this.config.gpu_vendor !== false) row += `<td class="table_element tooltip">${gpu_vendor}`;
                 if (this.config.gpu_temp !== false)
@@ -83,8 +91,8 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                     row += `<td class="table_element tooltip" style="color:${fan_color};">${fan}<span class="tooltip-text">updated: ${new Date(fan_sensor.last_updated).toLocaleString()}</span></td>`;
                 if (this.config.gpu_power !== false)
                     row += `<td class="table_element tooltip">${power}<span class="tooltip-text">updated: ${new Date(power_sensor.last_updated).toLocaleString()}</span></td>`;
-                if (this.config.gpu_hashrate !== false)
-                    row += `<td class="table_element tooltip">${hashrate}<span class="tooltip-text">updated: ${new Date(hash_sensor.last_updated).toLocaleString()}</span></td>`;
+                if (this.config.gpu_hashrate !== false && hash_sensor)
+                    row += `<td class="table_element tooltip">${hashrate}<span class="tooltip-text">updated: ${hash_sensor ? new Date(hash_sensor.last_updated).toLocaleString() : ''}</span></td>`;
                 row += `</tr>`;
 
                 this.rows.push(row);
@@ -107,13 +115,17 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
 
             let combined_table = "";
             if (this.config.combined_stats !== false) {
-                const miner_power_sensor = states["sensor." + this.miner_name + "_power"];
-                const miner_hash_sensor = states["sensor." + this.miner_name + "_" + mining_algorithm];
-                const miner_cpu_sensor = states["sensor." + this.miner_name + "_cpu"];
-                const miner_ram_sensor = states["sensor." + this.miner_name + "_ram"];
+                const entities = Object.values(hass.entities).filter(e => e.device_id == miner_id && e.platform == "nicehash_excavator")
+
+                const miner_power_sensor = states[getEntityByPrefix(entities,"power")];
+                const miner_hash_sensor = states[getEntityByPrefix(entities, mining_algorithm)];
+                const miner_cpu_sensor = states[getEntityByPrefix(entities,"cpu")];
+                const miner_ram_sensor = states[getEntityByPrefix(entities,"ram")];
 
                 const miner_power = miner_power_sensor?.state === "unavailable" ? "NaN" : miner_power_sensor.state + miner_power_sensor.attributes.unit_of_measurement;
-                const miner_hashrate = miner_hash_sensor?.state === "unavailable" ? "NaN" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement;
+                const miner_hashrate = miner_hash_sensor ?
+                    (miner_hash_sensor?.state === "unavailable" ? "NaN" : miner_hash_sensor.state + miner_hash_sensor.attributes.unit_of_measurement) :
+                    "-";
                 const miner_cpu = miner_cpu_sensor?.state === "unavailable" ? "NaN" : miner_cpu_sensor.state + miner_cpu_sensor.attributes.unit_of_measurement;
                 const miner_ram = miner_ram_sensor?.state === "unavailable" ? "NaN" : miner_ram_sensor.state + miner_ram_sensor.attributes.unit_of_measurement;
 
@@ -134,7 +146,7 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
                     combined_table += `<td class="table_element tooltip" style="color:${total_power_color};">${miner_power}<span class="tooltip-text">updated: ${new Date(
                         miner_power_sensor.last_updated
                     ).toLocaleString()}</span></td>`;
-                if (this.config.hashrate !== false)
+                if (this.config.hashrate !== false && miner_hash_sensor)
                     combined_table += `<td class="table_element tooltip" style="color:${total_hashrate_color};">${miner_hashrate}<span class="tooltip-text">updated: ${new Date(
                         miner_hash_sensor.last_updated
                     ).toLocaleString()}</span></td>`;
@@ -154,11 +166,14 @@ class NicehashExcavatorMonitorCard extends HTMLElement {
         this.config = config;
     }
 
-    getCardSize() {
-        return this.rows.length / 2 + 2;
-    }
-}
+   //getCardSize() {
+   //     return this.rows.length / 2 + 2;
+   // }
 
+}
+function getEntityByPrefix(entities, prefix) {
+    return entities.find(e => e.entity_id.endsWith(prefix))?.entity_id
+}
 customElements.define("nicehash-excavator-monitor-card", NicehashExcavatorMonitorCard);
 
 const PCIE_VENDOR_IDS = {
